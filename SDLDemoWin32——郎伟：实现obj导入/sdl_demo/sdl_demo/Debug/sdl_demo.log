@@ -1,0 +1,3 @@
+﻿  SDL_Demo.cpp
+d:\大三上秋冬学期\opengl\loadobj\learnfromviedo\sdllearning\sdldemowin32\sdl_demo\sdl_demo\sdl_demo.cpp(145): warning C4305: “参数”: 从“double”到“float”截断
+  sdl_demo.vcxproj -> D:\大三上秋冬学期\opengl\LoadObj\LearnfromViedo\SDLlearning\SDLDemoWin32\sdl_demo\Debug\sdl_demo.exe
