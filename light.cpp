@@ -1,117 +1,159 @@
+#include "Light.h"
 
+int Light::numLights;
+vector<int>  Light::availableLights;
+vector<Light *> Light::lights;
 
-#include <stdlib.h>
-#include "glut.h"
-#include<stdio.h>
-
-
-
-GLfloat position0[] = { 10,1,0,1 };
-GLfloat SpecularLight[] = { 1.0,1.0,0.0,1.0 };
-GLfloat DiffuseLight[] = { 1.0,1.0,0.0,1.0 };
-GLfloat ambientLight[] = { 1.0,1.0,1.0,1.0 };
-
-
-
-void light()
+void Light::Initialize(void)
 {
+	glGetIntegerv(GL_MAX_LIGHTS, &numLights);
 
-
-	//材质反光性设置
-	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };  //镜面反射参数
-	GLfloat mat_shininess[] = { 50.0 };               //高光指数
-	
-
-	glClearColor(0.0, 0.0, 0.0, 0.0);  //背景色
-	glShadeModel(GL_SMOOTH);           //多变性填充模式
-
-									   //材质属性
-	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-
-	
-	glLightfv(GL_LIGHT0, GL_POSITION, position0);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, SpecularLight);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, DiffuseLight);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
-
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
-	glEnable(GL_DEPTH_TEST);
-
-	//设置探照灯光照1位置及参数
-	GLfloat position1[] = { 0,4,0,1 };
-	GLfloat light1s[] = { 1.0,1.0,1.0,1.0 };
-	GLfloat light1d[] = { 1.0,1.0,1.0,1.0 };
-	GLfloat light1a[] = { 1.0,1.0,1.0,1.0};
-	GLfloat  direction[] = { 0,-60,0,1 };
-	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direction);
-	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 30.0);
-	glLightfv(GL_LIGHT1, GL_POSITION, position1);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, light1s);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, light1d);
-	glLightfv(GL_LIGHT1, GL_AMBIENT, light1a);
-
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT1);
-	glEnable(GL_DEPTH_TEST);
-
-
-	glutSwapBuffers();
+	for (int i = 0;i < numLights;i++)
+		availableLights.push_back(GL_LIGHT0 + i);
 }
 
-void key(unsigned char k, int x, int y)
+Light::Light(LIGHT_TYPE type)
 {
-	
-	switch (k)
+	lights.push_back(this);
+
+	if ((int)availableLights.size() > 0)
 	{
-	case 27:
-	
-	case 'b': {
-		if (position0[0] >= 0) {
-			position0[0] -= 0.5f;
-			position0[1] += 0.3f;
-			//SpecularLight[0] -= 0.02;
-			SpecularLight[2] += 0.1;
-			//DiffuseLight[0] -= 0.02;
-			DiffuseLight[2] += 0.1;
+		lightNum = availableLights[0];
 
-		}
-		else if (position0[0] < 0&&position0[0]>-10) {
-			position0[0] -= 0.5f;
-			position0[1] -= 0.3f;
-			//SpecularLight[0] += 0.02;
-			SpecularLight[2] -= 0.1;
-			//DiffuseLight[0] += 0.02;
-			DiffuseLight[2] -= 0.1;
+		availableLights.erase(availableLights.begin());
 
-		}
-		else if (position0[0] == -10) {
-			position0[0] = 10;
-		}
-		break;
+		Visible(true);
 
+		setLightType(type);
+
+		setAmbient(0,0,0,1);
+		setDiffuse(1,1,1,1);
+		setSpecular(1,1,1,1);
+
+		updateLight();
+	}
+	else
+	{
+		lightNum = 0;
+
+		Visible(false);
 	}
 
-
-	}
-
-	updateView(wHeight, wWidth);
 }
 
-
-
-int main (int argc,  char *argv[])
+Light::~Light()
 {
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
-	glutInitWindowSize(480,480);
-	int windowHandle = glutCreateWindow("Ex6");
+	if (lightNum != 0)
+		availableLights.push_back(lightNum);
 
-	glutDisplayFunc(light);
-	
-	glutMainLoop();
-	return 0;
+	for (vector<Light *>::iterator it = lights.begin();it != lights.end();it++)
+	{
+		if ((*it) == this)
+			lights.erase(it);
+	}
 }
 
+void Light::Visible(bool value)
+{
+	if (value)
+		glEnable( lightNum);
+}
 
+void Light::setDiffuse(float r, float g, float b, float a)
+{
+	diffuse[0] = r;
+	diffuse[1] = g;
+	diffuse[2] = b;
+	diffuse[3] = a;
+
+	glLightfv(lightNum, GL_DIFFUSE, diffuse);
+}
+void Light::setAmbient(float r, float g, float b, float a)
+{
+	ambient[0] = r;
+	ambient[1] = g;
+	ambient[2] = b;
+	ambient[3] = a;
+
+	glLightfv(lightNum, GL_AMBIENT, ambient);
+}
+void Light::setSpecular(float r, float g, float b, float a)
+{
+	specular[0] = r;
+	specular[1] = g;
+	specular[2] = b;
+	specular[3] = a;
+
+	glLightfv(lightNum, GL_SPECULAR, specular);
+}
+
+void Light::setLightType(LIGHT_TYPE type)
+{
+	lightType = type;
+
+	if (lightType == LIGHT_SPOT)
+	{
+		position[3] = 1.0f;
+	}
+	else if (lightType == LIGHT_POINT)
+	{
+		position[3] = 1.0f;
+		setCutoff(180.0f);
+	}
+	else if (lightType == LIGHT_DIRECTIONAL)
+	{
+		position[3] = 0.0f;
+
+	}
+
+	updateLight();
+}
+
+void Light::setPosition(float x, float y, float z,float w)
+{
+	  position[0] = x;
+	  position[1] = y;
+	  position[2] = z;
+	  position[3] = w;
+	  glLightfv(lightNum, GL_POSITION, position);
+
+}
+
+void Light::setSpotDirection(float x, float y, float z)
+{
+	spotDirection[0] = x;
+	spotDirection[1] = y;
+	spotDirection[2] = z;
+
+	glLightfv(lightNum, GL_SPOT_DIRECTION, spotDirection);
+}
+
+void Light::setCutoff(float value)
+{
+	cutoff = value;
+
+	glLightf(lightNum, GL_SPOT_CUTOFF, cutoff);
+}
+void Light::setExponent(float value)
+{
+	exponent = value;
+
+	glLightf(lightNum, GL_SPOT_EXPONENT, exponent);
+
+}
+void Light::setAttenuation(float constant, float linear, float quadratic)
+{
+	glLightf(lightNum, GL_CONSTANT_ATTENUATION,constant );
+	glLightf(lightNum, GL_LINEAR_ATTENUATION, linear);
+	glLightf(lightNum, GL_QUADRATIC_ATTENUATION,quadratic);
+}
+int Light::getLightNUm(void)
+{
+	return lightNum;
+}
+void Light::updateLight(void)
+{
+	glLightfv(lightNum, GL_POSITION, position);
+
+	glLightfv(lightNum, GL_SPOT_DIRECTION, spotDirection);
+}

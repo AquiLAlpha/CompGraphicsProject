@@ -1,0 +1,4 @@
+﻿  glut_demo.cpp
+d:\大三上秋冬学期\opengl\loadobj\selectandparenting\sdl_demo\sdl_demo\glut_demo.cpp(977): warning C4805: “==”: 在操作中将类型“GLboolean”与类型“bool”混合不安全
+d:\大三上秋冬学期\opengl\loadobj\selectandparenting\sdl_demo\sdl_demo\glut_demo.cpp(991): warning C4101: “j”: 未引用的局部变量
+  sdl_demo.vcxproj -> D:\大三上秋冬学期\opengl\LoadObj\SelectandParenting\sdl_demo\Debug\sdl_demo.exe
